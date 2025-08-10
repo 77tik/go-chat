@@ -52,6 +52,7 @@ opt := client.DefaultOption
 opt.SerializeType = protocol.ProtoBuffer // 或 protocol.JSON / protocol.MsgPack / protocol.SerializeNone
 xclient := client.NewXClient("YourService", client.Failtry, client.RoundRobin, discovery, opt)
 ```
++ 如果你要修改方法名的话，特别是rpc注册的方法要格外注意，你还得去调用该方法的地方把这个名字给改了
 
 ## Redis
 
