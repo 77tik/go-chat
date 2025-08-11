@@ -162,7 +162,7 @@ start-api: ## 启动 API 层
 .PHONY: start-site
 start-site: ## 启动站点
 	@echo "Starting chat site (port ${SITE_PORT})..."
-	./${SERVER_BIN} -module site > "${LOG_DIR}/site.log" 2>&1 &
+	./${SERVER_BIN} -module site
 	@sleep 1
 	@echo "All services started! Site should be accessible now."
 
@@ -270,3 +270,34 @@ set-wait-default: ## 重置task等待时间为默认(15秒)
 	$(eval TASK_WAIT_TIME=15)
 	@echo "Task wait time reset to default (${TASK_WAIT_TIME} seconds)"
 
+
+# ========================
+# 原始运行方法：
+# ========================
+
+.PHONY:docker
+docker:
+	docker compose up -d
+
+.PHONY:logic
+logic:
+	./gochat.bin -module logic
+
+.PHONY:connect
+connect:
+	./gochat.bin -module connect_websocket
+
+.PHONY:logic-connect
+logic-connect:logic connect
+
+.PHONY:task
+task:
+	./gochat.bin -module task
+
+.PHONY:api
+api:
+	./gochat.bin -module api
+
+.PHONY:site
+site:
+	./gochat.bin -module site

@@ -31,10 +31,12 @@ func GetRandomToken(length int) string {
 	return base64.URLEncoding.EncodeToString(r)
 }
 
+// sess_token : userData (拿token 去获取元信息)
 func CreateSessionId(sessionId string) string {
 	return SessionPrefix + sessionId
 }
 
+// sess_map_78 : token （拿用户ID 去获取token，接着就能调用上面的获取元信息了）
 func GetSessionIdByUserId(userId int) string {
 	return fmt.Sprintf("sess_map_%d", userId)
 }

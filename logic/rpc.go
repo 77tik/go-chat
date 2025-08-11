@@ -97,12 +97,12 @@ func (rpc *RpcLogic) Register(ctx context.Context, args *proto.RegisterRequest, 
 	}
 	//set token 生成会话令牌
 	randToken := tools.GetRandomToken(32)
-	sessionId := tools.CreateSessionId(randToken)
+	sessionId := tools.CreateSessionId(randToken) // 拿到 sess_token
 	userData := make(map[string]interface{})
 	userData["userId"] = userId
 	userData["userName"] = args.Name
 	RedisSessClient.Do("MULTI")
-	RedisSessClient.HMSet(sessionId, userData)
+	RedisSessClient.HMSet(sessionId, userData) // sess_token : userData
 	RedisSessClient.Expire(sessionId, 86400*time.Second)
 	err = RedisSessClient.Do("EXEC").Err()
 	if err != nil {
@@ -132,7 +132,7 @@ func (rpc *RpcLogic) Login(ctx context.Context, args *proto.LoginRequest, reply 
 	}
 
 	// 创建登录会话ID
-	loginSessionId := tools.GetSessionIdByUserId(data.Id)
+	loginSessionId := tools.GetSessionIdByUserId(data.Id) // sess_map_78 : token
 	//set token
 	//err = redis.HMSet(auth, userData)
 	randToken := tools.GetRandomToken(32)
@@ -153,9 +153,9 @@ func (rpc *RpcLogic) Login(ctx context.Context, args *proto.LoginRequest, reply 
 		}
 	}
 	RedisSessClient.Do("MULTI")
-	RedisSessClient.HMSet(sessionId, userData)
+	RedisSessClient.HMSet(sessionId, userData) // sess_token : userData
 	RedisSessClient.Expire(sessionId, 86400*time.Second)
-	RedisSessClient.Set(loginSessionId, randToken, 86400*time.Second)
+	RedisSessClient.Set(loginSessionId, randToken, 86400*time.Second) // sess_map_78 : token
 	err = RedisSessClient.Do("EXEC").Err()
 	//err = RedisSessClient.Set(authToken, data.Id, 86400*time.Second).Err()
 	if err != nil {

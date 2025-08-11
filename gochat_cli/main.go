@@ -5,14 +5,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/websocket"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
-	"time"
-
-	"github.com/gorilla/websocket"
 )
 
 const (
@@ -240,10 +239,16 @@ func sendMessage(text string) {
 
 // 获取在线用户 (对应前端getRoomInfo)
 func getOnlineUsers() {
-	client := &http.Client{Timeout: 10 * time.Second}
-	req, _ := http.NewRequest("GET", apiHost+"/user/getRoomInfo", nil)
-	req.Header.Add("Authorization", "Bearer "+authToken)
+	params := map[string]interface{}{
+		"roomId":    1,
+		"authToken": authToken, // 添加中间件必需的字段
+	}
 
+	jsonData, _ := json.Marshal(params)
+	req, _ := http.NewRequest("POST", apiHost+"/push/getRoomInfo", bytes.NewBuffer(jsonData))
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Println("请求失败:", err)
@@ -251,11 +256,24 @@ func getOnlineUsers() {
 	}
 	defer resp.Body.Close()
 
+	// 在解析响应前打印原始响应体
+	body, _ := ioutil.ReadAll(resp.Body)
+	log.Println("原始响应:", string(body))
+
+	// 需要再次将body放入新的Reader中
+	responseBody := bytes.NewReader(body)
+
 	var response Response
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+	if err := json.NewDecoder(responseBody).Decode(&response); err != nil {
 		log.Println("响应解析失败:", err)
 		return
 	}
+
+	//var response Response
+	//if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+	//	log.Println("响应解析失败:", err)
+	//	return
+	//}
 
 	if response.Code != 0 {
 		log.Println("获取用户列表失败:", response.Message)
