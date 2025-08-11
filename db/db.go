@@ -6,10 +6,12 @@
 package db
 
 import (
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/glebarez/sqlite"
+	_ "github.com/glebarez/sqlite"
 	"github.com/sirupsen/logrus"
-	"gochat/config"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"log"
 	"path/filepath"
 	"sync"
 	"time"
@@ -24,17 +26,20 @@ func init() {
 
 func initDB(dbName string) {
 	var e error
-	// if prod env , you should change mysql driver for yourself !!!
 	realPath, _ := filepath.Abs("./")
 	configFilePath := realPath + "/db/gochat.sqlite3"
 	syncLock.Lock()
-	dbMap[dbName], e = gorm.Open("sqlite3", configFilePath)
-	dbMap[dbName].DB().SetMaxIdleConns(4)
-	dbMap[dbName].DB().SetMaxOpenConns(20)
-	dbMap[dbName].DB().SetConnMaxLifetime(8 * time.Second)
-	if config.GetMode() == "dev" {
-		dbMap[dbName].LogMode(true)
+	logConfig := logger.Config{
+		LogLevel: logger.Info,
+		Colorful: true,
 	}
+	dbMap[dbName], e = gorm.Open(sqlite.Open(configFilePath), &gorm.Config{
+		Logger: logger.New(log.Default(), logConfig),
+	})
+	db, _ := dbMap[dbName].DB()
+	db.SetMaxIdleConns(4)
+	db.SetMaxOpenConns(20)
+	db.SetConnMaxLifetime(time.Second * 8)
 	syncLock.Unlock()
 	if e != nil {
 		logrus.Error("connect db fail:%s", e.Error())

@@ -36,6 +36,7 @@ func main() {
 		api.New().Run()
 	case "site":
 		site.New().Run()
+		//gochat_cli.Run()
 	default:
 		fmt.Println("exiting,module param error!")
 		return

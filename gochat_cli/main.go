@@ -1,4 +1,4 @@
-package main
+package gochat_cli
 
 import (
 	"bufio"
@@ -36,7 +36,7 @@ type User struct {
 	PassWord string `json:"passWord"`
 }
 
-func main() {
+func Run() {
 	fmt.Println("GoChat 命令行客户端")
 
 	for {
