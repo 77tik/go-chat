@@ -16,6 +16,7 @@ import (
 	"gochat/config"
 	"gochat/proto"
 	"gochat/tools"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -35,8 +36,8 @@ type Instance struct {
 
 type RpcConnectClient struct {
 	lock         sync.Mutex
-	ServerInsMap map[string][]Instance //serverId--[]ins 为什么有这么多服务实例，每个实例都有一个客户端，我猜测是因为task层要与所有的Connection进行连接？
-	IndexMap     map[string]int        //serverId--index 这是干嘛的？
+	ServerInsMap map[string][]Instance //ServerId--[]ins 为什么有这么多服务实例，每个实例都有一个客户端，我猜测是因为task层要与所有的Connection进行连接？
+	IndexMap     map[string]int        //ServerId--index 这是干嘛的？
 }
 
 // 根据服务实例，使用余数法返回一个节点实例
@@ -73,6 +74,15 @@ func (rc *RpcConnectClient) GetAllConnectTypeRpcClient() (rpcClientList []client
 		}
 		rpcClientList = append(rpcClientList, c)
 	}
+	return
+}
+
+// 解析 metadata，拿 serverId/serverType
+func parseMeta(raw string) (serverType, serverId string) {
+	m, _ := url.ParseQuery(strings.TrimSpace(raw))
+	// etcd 里是小写 serverId / serverType
+	serverType = m.Get("serverType")
+	serverId = m.Get("serverId")
 	return
 }
 
@@ -118,9 +128,11 @@ func (task *Task) InitConnectRpcClient() (err error) {
 	for _, connectConf := range d.GetServices() {
 		logrus.Infof("key is:%s,value is:%s", connectConf.Key, connectConf.Value)
 		//RpcConnectClients
-		// serverType=XXX2, serverId=XXX2
-		serverType := getParamByKey(connectConf.Value, "serverType")
-		serverId := getParamByKey(connectConf.Value, "serverId")
+		// serverType=XXX2, ServerId=XXX2
+		//serverType := getParamByKey(connectConf.Value, "serverType")
+		//serverId := getParamByKey(connectConf.Value, "serverId") //
+		serverType, serverId := parseMeta(connectConf.Value)
+
 		logrus.Infof("serverType is:%s,serverId is:%s", serverType, serverId)
 		if serverType == "" || serverId == "" {
 			continue
@@ -147,7 +159,7 @@ func (task *Task) InitConnectRpcClient() (err error) {
 			Client:     c,
 		}
 		// 初始化完以后就把实例加到这个全局RClient上
-		// 所以etcd上记录的形式是这样吗： tcp@192.168.1.100:8972 : serverType=OOP&serverId=1
+		// 所以etcd上记录的形式是这样吗： tcp@192.168.1.100:8972 : serverType=OOP&ServerId=1
 		// 所以是修改ServerID来改变Connection层吗？比较ServerID就是Connection
 		// 居然不是一个数组吗，我还以为会有很多Connection，目前看来就一个啊
 		if _, ok := RClient.ServerInsMap[serverId]; !ok {
@@ -174,9 +186,11 @@ func (task *Task) watchServicesChange(d client.ServiceDiscovery) {
 		insMap := make(map[string][]Instance)
 		for _, kv := range kvChan {
 			logrus.Infof("connect services change,key is:%s,value is:%s", kv.Key, kv.Value)
-			serverType := getParamByKey(kv.Value, "serverType")
-			serverId := getParamByKey(kv.Value, "serverId")
-			logrus.Infof("serverType is:%s,serverId is:%s", serverType, serverId)
+			//serverType := getParamByKey(kv.Value, "serverType")
+			//serverId := getParamByKey(kv.Value, "ServerId")
+			serverType, serverId := parseMeta(kv.Value)
+
+			logrus.Infof("serverType is:%s,ServerId is:%s", serverType, serverId)
 			if serverType == "" || serverId == "" {
 				continue
 			}
@@ -241,6 +255,7 @@ func (task *Task) broadcastRoomToConnect(roomId int, msg []byte) {
 		},
 	}
 	reply := &proto.SuccessReply{}
+	// 这是通过serverId 来获取一个call connect 层的客户端
 	rpcList := RClient.GetAllConnectTypeRpcClient()
 	for _, rpc := range rpcList {
 		logrus.Infof("broadcastRoomToConnect rpc  %v", rpc)

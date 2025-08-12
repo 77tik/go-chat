@@ -40,6 +40,14 @@ func (task *Task) InitQueueRedisClient() (err error) {
 			}
 
 			// 为什么结果要 >= 2 这个消费的消息是有什么形式吗
+			// BRPOP key [key ...] timeout 的返回是一个两元素数组：
+			//
+			//第一个是被弹出的列表名（哪个 key 被命中）；
+			//
+			//第二个是被弹出的值。
+			//
+			//即使你只传了一个队列名，它也会返回 []string{queueName, value}。
+			//所以你原代码里 len(result) >= 2 就是为了确保能安全地取到 result[1] 这个消息体。
 			if len(result) >= 2 {
 				task.Push(result[1])
 			}

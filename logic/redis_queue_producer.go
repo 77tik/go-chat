@@ -18,6 +18,7 @@ var RedisClient *redis.Client
 var RedisSessClient *redis.Client
 
 // logic 层作为客户端 把消息push到消息队列（只不过此时的消息队列使用redis做的）
+// 用kafka取代了redis，现在redis只用来存session
 func (logic *Logic) InitPublishRedisClient() (err error) {
 	redisOpt := tools.RedisOption{
 		Address:  config.Conf.Common.CommonRedis.RedisAddress,

@@ -28,6 +28,8 @@ func (logic *Logic) Run() {
 
 	runtime.GOMAXPROCS(logicConfig.LogicBase.CpuNum)
 	logic.ServerId = fmt.Sprintf("logic-%s", uuid.New().String())
+	// logic 层关闭以后关闭所有写者
+	defer closeAllWriters()
 	//init publish redis 这应该才是rpc => 消息队列的rpc客户端才对
 	if err := logic.InitPublishRedisClient(); err != nil {
 		logrus.Panicf("logic init publishRedisClient fail,err:%s", err.Error())

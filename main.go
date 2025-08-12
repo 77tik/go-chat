@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"gochat/api"
 	"gochat/connect"
+	"gochat/gochat_cli"
 	"gochat/logic"
-	"gochat/site"
 	"gochat/task"
 	"os"
 	"os/signal"
@@ -35,8 +35,8 @@ func main() {
 	case "api":
 		api.New().Run()
 	case "site":
-		site.New().Run()
-		//gochat_cli.Run()
+		//site.New().Run()
+		gochat_cli.Run()
 	default:
 		fmt.Println("exiting,module param error!")
 		return

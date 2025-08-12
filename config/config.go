@@ -172,6 +172,7 @@ type CommonRedis struct {
 type Common struct {
 	CommonEtcd  CommonEtcd  `mapstructure:"common-etcd"`
 	CommonRedis CommonRedis `mapstructure:"common-redis"`
+	Kafka       CommonKafka `mapstructure:"common-kafka"`
 }
 
 type ConnectBase struct {
@@ -263,4 +264,8 @@ type SiteBase struct {
 
 type SiteConfig struct {
 	SiteBase SiteBase `mapstructure:"site-base"`
+}
+
+type CommonKafka struct {
+	Brokers string
 }

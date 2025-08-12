@@ -278,7 +278,8 @@ func (rpc *RpcLogic) Push(ctx context.Context, args *proto.Send, reply *proto.Su
 	}
 
 	// 推送到对应的队列中
-	err = logic.RedisPublishChannel(serverIdStr, sendData.ToUserId, bodyBytes)
+	// err = logic.RedisPublishChannel(serverIdStr, sendData.ToUserId, bodyBytes)
+	err = logic.KafkaPublishChannel(serverIdStr, sendData.ToUserId, bodyBytes)
 	if err != nil {
 		logrus.Errorf("logic,redis publish err: %s", err.Error())
 		return
@@ -318,7 +319,10 @@ func (rpc *RpcLogic) PushRoom(ctx context.Context, args *proto.Send, reply *prot
 		logrus.Errorf("logic,PushRoom Marshal err:%s", err.Error())
 		return
 	}
-	err = logic.RedisPublishRoomInfo(roomId, len(roomUserInfo), roomUserInfo, bodyBytes)
+
+	// 推队列
+	// err = logic.RedisPublishRoomInfo(roomId, len(roomUserInfo), roomUserInfo, bodyBytes)
+	err = logic.KafkaPublishRoomInfo(roomId, len(roomUserInfo), roomUserInfo, bodyBytes)
 	if err != nil {
 		logrus.Errorf("logic,PushRoom err:%s", err.Error())
 		return
@@ -337,7 +341,10 @@ func (rpc *RpcLogic) Count(ctx context.Context, args *proto.Send, reply *proto.S
 	logic := new(Logic)
 	var count int
 	count, err = RedisSessClient.Get(logic.getRoomOnlineCountKey(fmt.Sprintf("%d", roomId))).Int()
-	err = logic.RedisPushRoomCount(roomId, count)
+
+	// 推队列
+	// err = logic.RedisPushRoomCount(roomId, count)
+	err = logic.KafkaPushRoomCount(roomId, count)
 	if err != nil {
 		logrus.Errorf("logic,Count err:%s", err.Error())
 		return
@@ -360,7 +367,10 @@ func (rpc *RpcLogic) GetRoomInfo(ctx context.Context, args *proto.Send, reply *p
 	if len(roomUserInfo) == 0 {
 		return errors.New("getRoomInfo no this user")
 	}
-	err = logic.RedisPushRoomInfo(roomId, len(roomUserInfo), roomUserInfo)
+
+	// 推队列
+	// err = logic.RedisPushRoomInfo(roomId, len(roomUserInfo), roomUserInfo)
+	err = logic.KafkaPushRoomInfo(roomId, len(roomUserInfo), roomUserInfo)
 	if err != nil {
 		logrus.Errorf("logic,GetRoomInfo err:%s", err.Error())
 		return
@@ -439,7 +449,13 @@ func (rpc *RpcLogic) DisConnect(ctx context.Context, args *proto.DisConnectReque
 	if err != nil {
 		logrus.Warnf("RedisCli HGetAll roomUserInfo key:%s, err: %s", roomUserKey, err)
 	}
-	if err = logic.RedisPublishRoomInfo(args.RoomId, len(roomUserInfo), roomUserInfo, nil); err != nil {
+
+	// 推队列
+	//if err = logic.RedisPublishRoomInfo(args.RoomId, len(roomUserInfo), roomUserInfo, nil); err != nil {
+	//	logrus.Warnf("publish RedisPublishRoomCount err: %s", err.Error())
+	//	return
+	//}
+	if err = logic.KafkaPublishRoomInfo(args.RoomId, len(roomUserInfo), roomUserInfo, nil); err != nil {
 		logrus.Warnf("publish RedisPublishRoomCount err: %s", err.Error())
 		return
 	}

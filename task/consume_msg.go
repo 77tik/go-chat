@@ -42,7 +42,7 @@ func (task *Task) processSinglePush(ch chan *PushParams) {
 	var arg *PushParams
 	for {
 		arg = <-ch
-		//@todo when arg.ServerId server is down, user could be reconnect other serverId but msg in queue no consume
+		//@todo when arg.ServerId server is down, user could be reconnect other ServerId but msg in queue no consume
 		// TODO：急需解决的问题：消息队列中的ID可能比服务器活得都久，如果服务器ID S1宕机，那么这些标注S1的消息，岂不是无处可去吗
 		// 服务器宕机意味着Rooms中的所有房间都已经没了，为什么会没是因为Room中的用户全部下线了，既然都全下线了，那么单聊数据就无目的地了
 		// 可以存入离线数据库，作为离线消息，在用户上线的时候加载离线消息即可

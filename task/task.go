@@ -12,6 +12,7 @@ import (
 )
 
 type Task struct {
+	ServerId string
 }
 
 func New() *Task {
@@ -24,7 +25,11 @@ func (task *Task) Run() {
 	runtime.GOMAXPROCS(taskConfig.TaskBase.CpuNum)
 	//read from redis queue
 	// 开启消费者，群聊消息由消费者直接发送，而单聊消息则被消费者丢入管道，由下面的GoPush去读取管道然后发送
-	if err := task.InitQueueRedisClient(); err != nil {
+	//if err := task.InitQueueRedisClient(); err != nil {
+	//	logrus.Panicf("task init publishRedisClient fail,err:%s", err.Error())
+	//}
+	// 从kafka队列中读取
+	if err := task.InitKafkaConsumer(task.ServerId); err != nil {
 		logrus.Panicf("task init publishRedisClient fail,err:%s", err.Error())
 	}
 	//rpc call connect layer send msg

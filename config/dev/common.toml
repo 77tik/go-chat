@@ -11,3 +11,6 @@ connectionTimeout = 5 # 连接超时(秒)
 redisAddress = "127.0.0.1:6379" # redis 地址
 redisPassword = "" # redis 密码 空表示无认证
 db = 0 # redis 数据库编号
+
+[common-kafka]
+Brokers = "127.0.0.1:9092" # Brokers = "k1:9092,k2:9092,k3:9092"
