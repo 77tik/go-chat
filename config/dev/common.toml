@@ -14,3 +14,5 @@ db = 0 # redis 数据库编号
 
 [common-kafka]
 Brokers = "127.0.0.1:9092" # Brokers = "k1:9092,k2:9092,k3:9092"
+AIJobsTopic    = "ai.jobs"
+AIResultsTopic = "ai.results"

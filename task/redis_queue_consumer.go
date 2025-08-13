@@ -9,7 +9,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/sirupsen/logrus"
 	"gochat/config"
-	"gochat/tools"
+	"gochat/internal/tools"
 	"time"
 )
 

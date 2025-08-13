@@ -8,7 +8,7 @@ package connect
 import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"gochat/proto"
+	"gochat/internal/proto"
 	"sync"
 )
 

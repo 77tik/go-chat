@@ -6,7 +6,7 @@ package task
 
 import (
 	"gochat/config"
-	"gochat/tools"
+	"gochat/internal/tools"
 	"testing"
 	"time"
 )

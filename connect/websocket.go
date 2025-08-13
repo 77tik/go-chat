@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	"gochat/config"
-	"gochat/proto"
+	"gochat/internal/proto"
 	"net/http"
 	"time"
 )

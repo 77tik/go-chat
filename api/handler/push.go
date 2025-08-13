@@ -10,8 +10,8 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"gochat/api/rpc"
 	"gochat/config"
-	"gochat/proto"
-	"gochat/tools"
+	"gochat/internal/proto"
+	"gochat/internal/tools"
 	"strconv"
 )
 

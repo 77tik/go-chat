@@ -5,7 +5,9 @@
  */
 package connect
 
-import "gochat/proto"
+import (
+	"gochat/internal/proto"
+)
 
 // 操作符？这是什么形式，代理吗？
 type Operator interface {

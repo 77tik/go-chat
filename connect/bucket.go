@@ -6,7 +6,7 @@
 package connect
 
 import (
-	"gochat/proto"
+	"gochat/internal/proto"
 	"sync"
 	"sync/atomic"
 )

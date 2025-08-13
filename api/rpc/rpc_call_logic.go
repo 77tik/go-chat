@@ -12,7 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/smallnest/rpcx/client"
 	"gochat/config"
-	"gochat/proto"
+	proto2 "gochat/internal/proto"
 	"sync"
 	"time"
 )
@@ -54,8 +54,8 @@ func InitLogicRpcClient() {
 	}
 }
 
-func (rpc *RpcLogic) Login(req *proto.LoginRequest) (code int, authToken string, msg string) {
-	reply := &proto.LoginResponse{}
+func (rpc *RpcLogic) Login(req *proto2.LoginRequest) (code int, authToken string, msg string) {
+	reply := &proto2.LoginResponse{}
 	err := LogicRpcClient.Call(context.Background(), "Login", req, reply)
 	if err != nil {
 		msg = err.Error()
@@ -65,8 +65,8 @@ func (rpc *RpcLogic) Login(req *proto.LoginRequest) (code int, authToken string,
 	return
 }
 
-func (rpc *RpcLogic) Register(req *proto.RegisterRequest) (code int, authToken string, msg string) {
-	reply := &proto.RegisterReply{}
+func (rpc *RpcLogic) Register(req *proto2.RegisterRequest) (code int, authToken string, msg string) {
+	reply := &proto2.RegisterReply{}
 	err := LogicRpcClient.Call(context.Background(), "Register", req, reply)
 	if err != nil {
 		msg = err.Error()
@@ -76,16 +76,16 @@ func (rpc *RpcLogic) Register(req *proto.RegisterRequest) (code int, authToken s
 	return
 }
 
-func (rpc *RpcLogic) GetUserNameByUserId(req *proto.GetUserInfoRequest) (code int, userName string) {
-	reply := &proto.GetUserInfoResponse{}
+func (rpc *RpcLogic) GetUserNameByUserId(req *proto2.GetUserInfoRequest) (code int, userName string) {
+	reply := &proto2.GetUserInfoResponse{}
 	LogicRpcClient.Call(context.Background(), "GetUserInfoByUserId", req, reply)
 	code = reply.Code
 	userName = reply.UserName
 	return
 }
 
-func (rpc *RpcLogic) CheckAuth(req *proto.CheckAuthRequest) (code int, userId int, userName string) {
-	reply := &proto.CheckAuthResponse{}
+func (rpc *RpcLogic) CheckAuth(req *proto2.CheckAuthRequest) (code int, userId int, userName string) {
+	reply := &proto2.CheckAuthResponse{}
 	LogicRpcClient.Call(context.Background(), "CheckAuth", req, reply)
 	code = reply.Code
 	userId = reply.UserId
@@ -93,41 +93,54 @@ func (rpc *RpcLogic) CheckAuth(req *proto.CheckAuthRequest) (code int, userId in
 	return
 }
 
-func (rpc *RpcLogic) Logout(req *proto.LogoutRequest) (code int) {
-	reply := &proto.LogoutResponse{}
+func (rpc *RpcLogic) Logout(req *proto2.LogoutRequest) (code int) {
+	reply := &proto2.LogoutResponse{}
 	LogicRpcClient.Call(context.Background(), "Logout", req, reply)
 	code = reply.Code
 	return
 }
 
-func (rpc *RpcLogic) Push(req *proto.Send) (code int, msg string) {
-	reply := &proto.SuccessReply{}
+func (rpc *RpcLogic) Push(req *proto2.Send) (code int, msg string) {
+	reply := &proto2.SuccessReply{}
 	LogicRpcClient.Call(context.Background(), "Push", req, reply)
 	code = reply.Code
 	msg = reply.Msg
 	return
 }
 
-func (rpc *RpcLogic) PushRoom(req *proto.Send) (code int, msg string) {
-	reply := &proto.SuccessReply{}
+func (rpc *RpcLogic) PushRoom(req *proto2.Send) (code int, msg string) {
+	reply := &proto2.SuccessReply{}
 	LogicRpcClient.Call(context.Background(), "PushRoom", req, reply)
 	code = reply.Code
 	msg = reply.Msg
 	return
 }
 
-func (rpc *RpcLogic) Count(req *proto.Send) (code int, msg string) {
-	reply := &proto.SuccessReply{}
+func (rpc *RpcLogic) Count(req *proto2.Send) (code int, msg string) {
+	reply := &proto2.SuccessReply{}
 	LogicRpcClient.Call(context.Background(), "Count", req, reply)
 	code = reply.Code
 	msg = reply.Msg
 	return
 }
 
-func (rpc *RpcLogic) GetRoomInfo(req *proto.Send) (code int, msg string) {
-	reply := &proto.SuccessReply{}
+func (rpc *RpcLogic) GetRoomInfo(req *proto2.Send) (code int, msg string) {
+	reply := &proto2.SuccessReply{}
 	LogicRpcClient.Call(context.Background(), "GetRoomInfo", req, reply)
 	code = reply.Code
 	msg = reply.Msg
+	return
+}
+
+// api/rpc/logic_client.go
+// ...保留你现有的内容，新增：
+func (rpc *RpcLogic) ListRoomMessages(req *proto2.ListMessagesRequest) (code int, list []proto2.MessageDTO, msg string) {
+	reply := &proto2.ListMessagesResponse{}
+	err := LogicRpcClient.Call(context.Background(), "ListRoomMessages", req, reply)
+	if err != nil {
+		msg = err.Error()
+	}
+	code = reply.Code
+	list = reply.Data
 	return
 }

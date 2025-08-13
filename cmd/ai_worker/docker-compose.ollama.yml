@@ -1,0 +1,14 @@
+version: "3.8"
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"          # 暴露 HTTP API
+    volumes:
+      - ollama:/root/.ollama   # 模型权重持久化
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h  # 可选：空闲保持
+volumes:
+  ollama:

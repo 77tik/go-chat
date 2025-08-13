@@ -7,7 +7,7 @@ package connect
 
 import (
 	"github.com/gorilla/websocket"
-	"gochat/proto"
+	"gochat/internal/proto"
 	"net"
 )
 

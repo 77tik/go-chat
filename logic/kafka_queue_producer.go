@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"gochat/proto"
+	"gochat/internal/proto"
 	"strconv"
 	"strings"
 	"sync"
@@ -29,7 +29,7 @@ func getWriter(topic string) *kafka.Writer {
 	if w, ok := kafkaWriters.Load(topic); ok {
 		return w.(*kafka.Writer)
 	}
-	brokers := strings.Split(config.Conf.Common.Kafka.Brokers, ",")
+	brokers := strings.Split(config.Conf.Common.CommonKafka.Brokers, ",")
 	w := &kafka.Writer{
 		Addr:                   kafka.TCP(brokers...),
 		Topic:                  topic,

@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -205,6 +206,7 @@ func enterChatRoom() {
 	}
 
 	header(roomID)
+	loadHistory(50) // <<< 新增：初始拉取 50 条历史
 
 	done := make(chan struct{})
 	go receiveMessages(conn, done)
@@ -229,6 +231,35 @@ func enterChatRoom() {
 			} else {
 				printWarn("当前示例客户端只在启动时加入房间。要切换房间，请重进。")
 			}
+		case strings.HasPrefix(cmd, "/history"):
+			// /history 或 /history 100
+			fields := strings.Fields(cmd)
+			n := 50
+			if len(fields) >= 2 {
+				if v, err := strconv.Atoi(fields[1]); err == nil {
+					n = v
+				}
+			}
+			loadHistory(n)
+
+		case strings.HasPrefix(cmd, "/sum"):
+			// /sum 或 /sum 120
+			fields := strings.Fields(cmd)
+			n := 120
+			if len(fields) >= 2 {
+				if v, err := strconv.Atoi(fields[1]); err == nil {
+					n = v
+				}
+			}
+			aiSummarize(n)
+		case cmd == "/help":
+			fmt.Println()
+			fmt.Println("可用命令：")
+			fmt.Println("  /users            查看在线用户（由服务端通过 WS 推送）")
+			fmt.Println("  /history [N]      拉取最近 N 条历史（默认 50，最大 500）")
+			fmt.Println("  /sum [N]          让 AI 总结最近 N 条历史（默认 120，最大 500）")
+			fmt.Println("  /exit             退出聊天室")
+
 		default:
 			if cmd != "" {
 				sendRoomMessage(cmd)
@@ -266,11 +297,16 @@ func receiveMessages(conn *websocket.Conn, done chan struct{}) {
 		switch op {
 		case 3: // 房间聊天
 			inner := decodeInnerMsg(evt["msg"])
-			if inner != nil {
-				printChat(inner)
-			} else {
-				printRaw(payload)
+			if inner == nil {
+				// 兜底：有些服务端直接把所有字段放外层
+				inner = innerFromOuter(evt)
 			}
+			// 如果还是拿不到内容，就别再打印原始 JSON 了，给个温和提示
+			if inner == nil || strings.TrimSpace(inner.Msg) == "" {
+				printSystem("收到一条空消息或未知格式")
+				break
+			}
+			printChat(inner)
 		case 4: // 在线人数
 			cnt := asInt(evt["count"])
 			if cnt == 0 {
@@ -339,6 +375,96 @@ func triggerRoomInfo() {
 	printSystem("已请求最新在线用户列表，请留意 WS 推送")
 }
 
+// 历史消息（对应 /history/list 返回的每条）
+type HistMsg struct {
+	Id           int64  `json:"id"`
+	RoomId       int    `json:"roomId"`
+	FromUserId   int    `json:"fromUserId"`
+	FromUserName string `json:"fromUserName"`
+	Content      string `json:"content"`
+	CreateTime   string `json:"createTime"` // "YYYY-MM-DD HH:MM:SS"（服务端已转本地时区）
+}
+
+// 进入房间后调用：拉取最近 N 条历史，按时间正序打印
+func loadHistory(limit int) {
+	if limit <= 0 || limit > 500 {
+		limit = 50
+	}
+
+	params := map[string]interface{}{
+		"authToken": authToken,
+		"roomId":    roomID,
+		"limit":     limit,
+	}
+	b, _ := json.Marshal(params)
+	resp, err := http.Post(apiHost+"/history/list", "application/json", bytes.NewBuffer(b))
+	if err != nil {
+		printErr("拉取历史失败: %v", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	var r CommonResp
+	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		printErr("解析历史失败: %v", err)
+		return
+	}
+	if r.Code != 0 {
+		printErr("历史接口错误: %s", r.Message)
+		return
+	}
+
+	var list []HistMsg
+	if err := json.Unmarshal(r.Data, &list); err != nil {
+		printErr("历史数据解析失败: %v", err)
+		return
+	}
+	if len(list) == 0 {
+		printSystem("暂无历史消息")
+		return
+	}
+	printSystem("载入历史 %d 条：", len(list))
+	for _, m := range list {
+		// 复用现有渲染
+		im := &InnerMsg{
+			Msg:          m.Content,
+			FromUserName: m.FromUserName,
+			CreateTime:   m.CreateTime,
+		}
+		printChat(im)
+	}
+}
+
+// 触发 AI 总结（结果稍后由 WS 推送回来，FromUserName 通常是 "🤖 AI"）
+func aiSummarize(limit int) {
+	if limit <= 0 || limit > 500 {
+		limit = 120
+	}
+	params := map[string]interface{}{
+		"authToken": authToken,
+		"roomId":    roomID,
+		"limit":     limit,
+	}
+	b, _ := json.Marshal(params)
+	resp, err := http.Post(apiHost+"/ai/summarize", "application/json", bytes.NewBuffer(b))
+	if err != nil {
+		printErr("提交 AI 总结失败: %v", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	var r CommonResp
+	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		printErr("AI 总结响应解析失败: %v", err)
+		return
+	}
+	if r.Code != 0 {
+		printErr("AI 总结接口错误: %s", r.Message)
+		return
+	}
+	printSystem("已提交 AI 总结任务，请稍候留意机器人消息")
+}
+
 // —— 样式化输出 —— //
 
 func header(room int) {
@@ -399,6 +525,9 @@ func printChat(im *InnerMsg) {
 	t := im.CreateTime
 	if t == "" {
 		t = time.Now().Format("15:04:05")
+	} else if len(t) >= 8 {
+		// 截到 HH:MM:SS（无论服务端给的是完整日期还是时分秒）
+		t = t[len(t)-8:]
 	}
 	name := im.FromUserName
 	me := (name == currentUser)
@@ -460,6 +589,32 @@ func asInt(x interface{}) int {
 		return int(i)
 	default:
 		return 0
+	}
+}
+
+func asString(x interface{}) string {
+	switch v := x.(type) {
+	case string:
+		return v
+	case []byte:
+		return string(v)
+	default:
+		return fmt.Sprintf("%v", v)
+	}
+}
+
+// 当内层解不出来时，用外层字段组装一条 InnerMsg
+func innerFromOuter(evt map[string]interface{}) *InnerMsg {
+	return &InnerMsg{
+		Code:         asInt(evt["code"]),
+		Msg:          asString(evt["msg"]),
+		FromUserId:   asInt(evt["fromUserId"]),
+		FromUserName: asString(evt["fromUserName"]),
+		ToUserId:     asInt(evt["toUserId"]),
+		ToUserName:   asString(evt["toUserName"]),
+		RoomId:       asInt(evt["roomId"]),
+		Op:           asInt(evt["op"]),
+		CreateTime:   asString(evt["createTime"]),
 	}
 }
 

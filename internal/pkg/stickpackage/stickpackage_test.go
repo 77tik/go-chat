@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gochat/config"
-	"gochat/proto"
+	"gochat/internal/proto"
 	"log"
 	"net"
 	"testing"

@@ -82,6 +82,8 @@ type Send struct {
 	RoomId       int    `json:"roomId"`
 	Op           int    `json:"op"`
 	CreateTime   string `json:"createTime"`
+	// 新增历史落库ID
+	ClientMsgId int64 `json:"clientMsgId"`
 }
 
 type SendTcp struct {

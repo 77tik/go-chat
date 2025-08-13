@@ -13,8 +13,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/smallnest/rpcx/server"
 	"gochat/config"
-	"gochat/proto"
-	"gochat/tools"
+	proto2 "gochat/internal/proto"
+	"gochat/internal/tools"
 	"strings"
 	"sync"
 	"time"
@@ -57,7 +57,7 @@ type RpcConnectPush struct {
 }
 
 // 单聊消息推送
-func (rpc *RpcConnectPush) PushSingleMsg(ctx context.Context, pushMsgReq *proto.PushMsgRequest, successReply *proto.SuccessReply) (err error) {
+func (rpc *RpcConnectPush) PushSingleMsg(ctx context.Context, pushMsgReq *proto2.PushMsgRequest, successReply *proto2.SuccessReply) (err error) {
 	var (
 		bucket  *Bucket
 		channel *Channel
@@ -81,7 +81,7 @@ func (rpc *RpcConnectPush) PushSingleMsg(ctx context.Context, pushMsgReq *proto.
 }
 
 // 群聊消息推送
-func (rpc *RpcConnectPush) PushRoomMsg(ctx context.Context, pushRoomMsgReq *proto.PushRoomMsgRequest, successReply *proto.SuccessReply) (err error) {
+func (rpc *RpcConnectPush) PushRoomMsg(ctx context.Context, pushRoomMsgReq *proto2.PushRoomMsgRequest, successReply *proto2.SuccessReply) (err error) {
 	successReply.Code = config.SuccessReplyCode
 	successReply.Msg = config.SuccessReplyMsg
 	logrus.Infof("PushRoomMsg msg %+v", pushRoomMsgReq)
@@ -92,7 +92,7 @@ func (rpc *RpcConnectPush) PushRoomMsg(ctx context.Context, pushRoomMsgReq *prot
 }
 
 // 怎么和上面的是一样的实现
-func (rpc *RpcConnectPush) PushRoomCount(ctx context.Context, pushRoomMsgReq *proto.PushRoomMsgRequest, successReply *proto.SuccessReply) (err error) {
+func (rpc *RpcConnectPush) PushRoomCount(ctx context.Context, pushRoomMsgReq *proto2.PushRoomMsgRequest, successReply *proto2.SuccessReply) (err error) {
 	successReply.Code = config.SuccessReplyCode
 	successReply.Msg = config.SuccessReplyMsg
 	logrus.Infof("PushRoomCount msg %v", pushRoomMsgReq)
@@ -102,7 +102,7 @@ func (rpc *RpcConnectPush) PushRoomCount(ctx context.Context, pushRoomMsgReq *pr
 	return
 }
 
-func (rpc *RpcConnectPush) PushRoomInfo(ctx context.Context, pushRoomMsgReq *proto.PushRoomMsgRequest, successReply *proto.SuccessReply) (err error) {
+func (rpc *RpcConnectPush) PushRoomInfo(ctx context.Context, pushRoomMsgReq *proto2.PushRoomMsgRequest, successReply *proto2.SuccessReply) (err error) {
 	successReply.Code = config.SuccessReplyCode
 	successReply.Msg = config.SuccessReplyMsg
 	logrus.Infof("connect,PushRoomInfo msg %+v", pushRoomMsgReq)

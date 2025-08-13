@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"github.com/sirupsen/logrus"
 	"gochat/config"
-	"gochat/proto"
+	"gochat/internal/proto"
 	"math/rand"
 )
 
@@ -73,6 +73,10 @@ func (task *Task) Push(msg string) {
 			Msg:      m.Msg,
 		}
 	case config.OpRoomSend:
+		// 增加历史存储功能，因为task是要调用connect方法发送给用户的，所以这里的信息很权威，适合存储进数据库
+		if err := task.History.SaveRoomMsgByBytes(m.Msg); err != nil {
+			logrus.Warnf("save history err: %v", err)
+		}
 		task.broadcastRoomToConnect(m.RoomId, m.Msg)
 	case config.OpRoomCountSend:
 		task.broadcastRoomCountToConnect(m.RoomId, m.Count)

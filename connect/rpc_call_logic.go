@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/smallnest/rpcx/client"
 	"gochat/config"
-	"gochat/proto"
+	"gochat/internal/proto"
 	"time"
 )
 

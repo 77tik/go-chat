@@ -7,7 +7,7 @@ package connect
 
 import (
 	"fmt"
-	"gochat/tools"
+	"gochat/internal/tools"
 	"time"
 )
 

@@ -18,8 +18,8 @@ func topicForServer(serverId string) string {
 
 func (t *Task) InitKafkaConsumer(serverId string) error {
 	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:        strings.Split(config.Conf.Common.Kafka.Brokers, ","), // "ip1:9092,ip2:9092"
-		GroupID:        "gochat-task-" + serverId,                            // 同 ServerId 的一组消费者分摊分区
+		Brokers:        strings.Split(config.Conf.Common.CommonKafka.Brokers, ","), // "ip1:9092,ip2:9092"
+		GroupID:        "gochat-task-" + serverId,                                  // 同 ServerId 的一组消费者分摊分区
 		Topic:          topicForServer(serverId),
 		MinBytes:       10e3,        // 10KB
 		MaxBytes:       10e6,        // 10MB

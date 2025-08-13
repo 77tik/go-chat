@@ -10,8 +10,8 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"gochat/api/handler"
 	"gochat/api/rpc"
-	"gochat/proto"
-	"gochat/tools"
+	"gochat/internal/proto"
+	"gochat/internal/tools"
 	"net/http"
 )
 
@@ -23,6 +23,10 @@ func Register() *gin.Engine {
 	initUserRouter(r)
 	// 初始化推送路由
 	initPushRouter(r)
+	// 初始化历史路由
+	initHistoryRouter(r)
+	// 初始化ai相关路由
+	initAIRouter(r)
 
 	// 自定义404处理
 	r.NoRoute(func(c *gin.Context) {
@@ -53,6 +57,22 @@ func initPushRouter(r *gin.Engine) {
 		pushGroup.POST("/getRoomInfo", handler.GetRoomInfo)
 	}
 
+}
+
+func initHistoryRouter(r *gin.Engine) {
+	g := r.Group("/history")
+	g.Use(CheckSessionId())
+	{
+		g.POST("/list", handler.ListRoomHistory) // 拉取房间历史消息
+	}
+}
+
+func initAIRouter(r *gin.Engine) {
+	g := r.Group("/ai")
+	g.Use(CheckSessionId())
+	{
+		g.POST("/summarize", handler.AISummarizeRoom) // 生成房间总结（异步）
+	}
 }
 
 type FormCheckSessionId struct {

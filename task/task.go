@@ -8,11 +8,13 @@ package task
 import (
 	"github.com/sirupsen/logrus"
 	"gochat/config"
+	"gochat/internal/chatstore"
 	"runtime"
 )
 
 type Task struct {
 	ServerId string
+	History  *chatstore.Store
 }
 
 func New() *Task {
@@ -30,7 +32,7 @@ func (task *Task) Run() {
 	//}
 	// 从kafka队列中读取
 	if err := task.InitKafkaConsumer(task.ServerId); err != nil {
-		logrus.Panicf("task init publishRedisClient fail,err:%s", err.Error())
+		logrus.Panicf("task init publishKafkaClient fail,err:%s", err.Error())
 	}
 	//rpc call connect layer send msg
 	// 向connect发送消息，我记得connection层似乎有一个server来着？
@@ -40,4 +42,12 @@ func (task *Task) Run() {
 	}
 	//GoPush 专门为了单聊消息的发送制作的管道
 	task.GoPush()
+
+	if err := task.InitHistoryStore(); err != nil {
+		logrus.Errorf(err.Error())
+	}
+
+	if err := task.InitAIResultsConsumer(); err != nil {
+		logrus.Panicf("task init InitAIResultsConsumer fail,err:%s", err.Error())
+	}
 }

@@ -35,6 +35,10 @@ func (logic *Logic) Run() {
 		logrus.Panicf("logic init publishRedisClient fail,err:%s", err.Error())
 	}
 
+	if err := logic.InitAIKafkaProducer(); err != nil {
+		logrus.Panicf("logic init AIKafkaProducer fail,err:%s", err.Error())
+	}
+
 	//init rpc server 这里是logic => 消息队列的rpc吗？ 不对，应该是作为api => logic的rpc服务器
 	// 》没想到吧，其实是connect层调用的
 	// 还有个问题，它是怎么把服务注册到etcd上的？
